@@ -9,7 +9,6 @@ type TBoard = string[];
 function App() {
   const [board, setBoard] = useState<TBoard>(originalBoard);
   const [userValue, setUserValue] = useState<string | null>(null);
-
   const [userTurn, setUserTurn] = useState(false);
   const [botTurn, setBotTurn] = useState(false);
 
@@ -17,6 +16,14 @@ function App() {
     () => values.find((v) => v != userValue),
     [userValue]
   );
+  const availableIndexes = board.reduce<number[]>((acc, cell, index) => {
+    if (cell === "") {
+      acc.push(index);
+    }
+    return acc;
+  }, []);
+
+  const tie = availableIndexes.length === 0 ? true : false;
 
   //usuario selecciona su valor
   const handleSelectUserValue = (value: string) => {
@@ -31,12 +38,12 @@ function App() {
         throw Error("no hay valor de usuario");
       }
       if (cell !== "") {
-        return cell;
+        return cell; //retorna lo que ya se habia escrito
       }
       if (index === +id && cell === "") {
         return turnValue;
       }
-      return "";
+      return ""; //retorna valor original del array, no modifica
     });
     return newBoard;
   };
@@ -59,12 +66,6 @@ function App() {
   const handleBotTurn = () => {
     if (!botValue) return;
     if (!botTurn) return;
-    const availableIndexes = board.reduce<number[]>((acc, cell, index) => {
-      if (cell === "") {
-        acc.push(index);
-      }
-      return acc;
-    }, []);
 
     const randomAvialableIndex =
       availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
@@ -93,8 +94,9 @@ function App() {
   return (
     <>
       <div className="titles">
-        {botTurn && <h1>Es turno del bot</h1>}
-        {userTurn && <h1>Es turno del usuario</h1>}
+        {!tie && botTurn && <h1>Es turno del bot</h1>}
+        {!tie && userTurn && <h1>Es turno del usuario</h1>}
+        {tie && <h1>Se acabo la partida</h1>}
         {!userValue && <h1>Escoge un valor para iniciar la partida</h1>}
       </div>
       <ValueContainer
