@@ -1,82 +1,42 @@
 import { useMemo, useState } from "react";
 import "./App.css";
 import Board from "./components/Board";
-import { originalBoard, values, winningCells } from "./lib/constants";
+import { values } from "./lib/constants";
 import ValueContainer from "./components/ValueContainer";
-
-type TBoard = string[];
+import { useBoard, useTurn, useWinner } from "./lib/hooks";
 
 function App() {
-  const [board, setBoard] = useState<TBoard>(originalBoard);
   const [userValue, setUserValue] = useState<string | null>(null);
-  const [userTurn, setUserTurn] = useState(false);
-  const [botTurn, setBotTurn] = useState(false);
+
+  const { board, availableIndexes, tie, handleChooseCell } = useBoard();
+  const { winner, winningMessage } = useWinner(board, userValue);
+  const { userTurn, botTurn, handleChangeTurn, handleFirstTurn } = useTurn();
 
   const botValue = useMemo(
     () => values.find((v) => v != userValue),
     [userValue]
   );
 
-  const availableIndexes = board.reduce<number[]>((acc, cell, index) => {
-    if (cell === "") {
-      acc.push(index);
-    }
-    return acc;
-  }, []);
-
-  const tie = availableIndexes.length === 0 ? true : false;
-
-  const handleWinner = () => {
-    for (const combination of winningCells) {
-      const [a, b, c] = combination;
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
-      }
-    }
-    return null;
-  };
-
-  const winner = handleWinner();
-  const winningMessage = winner === userValue ? "Ganaste!!!" : "Gano el bot";
   //usuario selecciona su valor
   const handleSelectUserValue = (value: string) => {
     setUserValue(value);
     handleFirstTurn();
   };
 
-  //agrega el valor a una celda
-  const handleSelectCell = (id: number, turnValue: string): TBoard => {
-    const newBoard = board.map((cell, index) => {
-      if (!turnValue) {
-        throw Error("no hay valor de usuario");
-      }
-      if (cell !== "") {
-        return cell; //retorna lo que ya se habia escrito
-      }
-      if (index === +id && cell === "") {
-        return turnValue;
-      }
-      return ""; //retorna valor original del array, no modifica
-    });
-    return newBoard;
-  };
-
   //seleccion de celda con click
-  const handleCellValueClick = (
+  const handleUserTurn = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     if (!userValue) return;
     if (!userTurn) return;
     if (winner) return;
     const id = e.currentTarget.id;
-    const newBoard = handleSelectCell(+id, userValue);
-    setUserTurn(false);
-    setBotTurn(true);
-    setBoard(newBoard);
+    handleChooseCell(+id, userValue);
+    handleChangeTurn(false, true);
   };
 
   //seleccion de celda automatizada
-  const handleBotTurn = () => {
+  const handleBot = () => {
     if (!botValue) return;
     if (!botTurn) return;
     if (winner) return;
@@ -85,24 +45,13 @@ function App() {
 
     if (availableIndexes.length === 0) return;
 
-    if (board[randomAvialableIndex] !== "") {
-      handleBotTurn();
-      return;
-    }
-    const newBoard = handleSelectCell(randomAvialableIndex, botValue);
     setTimeout(() => {
-      setBotTurn(false);
-      setUserTurn(true);
-      setBoard(newBoard);
-    }, 1000);
+      handleChooseCell(randomAvialableIndex, botValue);
+      handleChangeTurn(true, false);
+    }, 500);
   };
 
-  const handleFirstTurn = () => {
-    const randomNumber = Math.floor(Math.random() * 100);
-    randomNumber % 2 === 0 ? setBotTurn(true) : setUserTurn(true);
-  };
-
-  if (botTurn) handleBotTurn();
+  if (botTurn) handleBot();
 
   return (
     <>
@@ -117,9 +66,7 @@ function App() {
         userValue={userValue}
         handleSelectUserValue={handleSelectUserValue}
       />
-      {userValue && (
-        <Board board={board} handleCellValueClick={handleCellValueClick} />
-      )}
+      {userValue && <Board board={board} handleUserTurn={handleUserTurn} />}
     </>
   );
 }

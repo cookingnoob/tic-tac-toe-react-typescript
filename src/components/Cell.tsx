@@ -1,16 +1,14 @@
 type CellProps = {
   c: string;
   index: number;
-  handleCellValueClick: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => void;
+  handleUserTurn: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 };
-export default function Cell({ c, index, handleCellValueClick }: CellProps) {
+export default function Cell({ c, index, handleUserTurn }: CellProps) {
   return (
     <button
       id={`${index}`}
       className="card"
-      onClick={handleCellValueClick}
+      onClick={handleUserTurn}
       disabled={c ? true : false}
     >
       {c}
