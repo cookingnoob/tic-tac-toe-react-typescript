@@ -9,13 +9,21 @@ type TBoard = string[];
 function App() {
   const [board, setBoard] = useState<TBoard>(originalBoard);
   const [userValue, setUserValue] = useState<string | null>(null);
+
   const [userTurn, setUserTurn] = useState(false);
   const [botTurn, setBotTurn] = useState(false);
+
   const botValue = useMemo(
     () => values.find((v) => v != userValue),
     [userValue]
   );
 
+  //usuario selecciona su valor
+  const handleSelectUserValue = (value: string) => {
+    setUserValue(value);
+  };
+
+  //agrega el valor a una celda
   const handleSelectCell = (id: number, turnValue: string): TBoard => {
     const newBoard = board.map((cell, index) => {
       if (!turnValue) {
@@ -24,7 +32,7 @@ function App() {
       if (cell !== "") {
         return cell;
       }
-      if (index === +id) {
+      if (index === +id && cell === "") {
         return turnValue;
       }
       return "";
@@ -32,6 +40,7 @@ function App() {
     return newBoard;
   };
 
+  //seleccion de celda con click
   const handleCellValueClick = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -41,20 +50,21 @@ function App() {
     const id = e.currentTarget.id;
     const newBoard = handleSelectCell(+id, userValue);
     setBoard(newBoard);
+    handleBotTurn();
   };
 
-  const handleSelectUserValue = (value: string) => {
-    setUserValue(value);
-  };
-
+  //seleccion de celda automatizada
   const handleBotTurn = () => {
-    const randomNumber = Math.floor(Math.random() * 6) + 1;
+    const randomNumber = Math.floor(Math.random() * 9) + 1;
     if (!botValue) {
+      return;
+    }
+    if (board[randomNumber] !== "") {
+      handleBotTurn();
       return;
     }
     const newBoard = handleSelectCell(randomNumber, botValue);
     setBoard(newBoard);
-    console.log("botValue newBoard", newBoard);
   };
 
   return (
