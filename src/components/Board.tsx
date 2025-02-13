@@ -2,13 +2,20 @@ import Cell from "./Cell";
 
 type BoardPros = {
   board: string[];
-  handleClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  handleCellValueClick: (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => void;
 };
-export default function Board({ board, handleClick }: BoardPros) {
+export default function Board({ board, handleCellValueClick }: BoardPros) {
   return (
     <div className="board">
       {board.map((c, index) => (
-        <Cell c={c} index={index} handleClick={handleClick} />
+        <Cell
+          key={index}
+          c={c}
+          index={index}
+          handleCellValueClick={handleCellValueClick}
+        />
       ))}
     </div>
   );
