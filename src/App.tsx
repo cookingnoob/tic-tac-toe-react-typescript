@@ -21,6 +21,7 @@ function App() {
   //usuario selecciona su valor
   const handleSelectUserValue = (value: string) => {
     setUserValue(value);
+    handleFirstTurn();
   };
 
   //agrega el valor a una celda
@@ -44,31 +45,58 @@ function App() {
   const handleCellValueClick = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
-    if (!userValue) {
-      return;
-    }
+    if (!userValue) return;
+    if (!userTurn) return;
+
     const id = e.currentTarget.id;
     const newBoard = handleSelectCell(+id, userValue);
+    setUserTurn(false);
+    setBotTurn(true);
     setBoard(newBoard);
-    handleBotTurn();
   };
 
   //seleccion de celda automatizada
   const handleBotTurn = () => {
-    const randomNumber = Math.floor(Math.random() * 9) + 1;
-    if (!botValue) {
-      return;
-    }
-    if (board[randomNumber] !== "") {
+    if (!botValue) return;
+    if (!botTurn) return;
+    const availableIndexes = board.reduce<number[]>((acc, cell, index) => {
+      if (cell === "") {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+
+    const randomAvialableIndex =
+      availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
+
+    if (availableIndexes.length === 0) return;
+
+    if (board[randomAvialableIndex] !== "") {
       handleBotTurn();
       return;
     }
-    const newBoard = handleSelectCell(randomNumber, botValue);
-    setBoard(newBoard);
+    const newBoard = handleSelectCell(randomAvialableIndex, botValue);
+    setTimeout(() => {
+      setBotTurn(false);
+      setUserTurn(true);
+      setBoard(newBoard);
+    }, 1000);
   };
+
+  const handleFirstTurn = () => {
+    const randomNumber = Math.floor(Math.random() * 100);
+    randomNumber % 2 === 0 ? setBotTurn(true) : setUserTurn(true);
+  };
+
+  if (botTurn) handleBotTurn();
 
   return (
     <>
+      <div className="titles">
+        {botTurn && <h1>Es turno del bot</h1>}
+        {userTurn && <h1>Es turno del usuario</h1>}
+        {!userValue && <h1>Escoge un valor para iniciar la partida</h1>}
+      </div>
       <ValueContainer
         userValue={userValue}
         handleSelectUserValue={handleSelectUserValue}
